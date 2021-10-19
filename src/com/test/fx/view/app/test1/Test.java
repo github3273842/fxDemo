@@ -6,22 +6,28 @@ import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
+import javafx.geometry.*;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
+import javafx.scene.text.*;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.util.Random;
 
 public class Test extends Application {
     @Override
@@ -29,14 +35,14 @@ public class Test extends Application {
         primaryStage.getIcons().add(new Image("/com/test/fx/icon/title.svg"));      //设置图标
 //        primaryStage.setIconified(true);        //最小化
 //        primaryStage.setMaximized(true);        //最大化
-        //width,x,y  监听
+        //width,x,y  监听窗口变化
         primaryStage.heightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             System.out.println(newValue.floatValue());
         });
 
 //        primaryStage.setFullScreen(true);     //全屏
 //        primaryStage.setOpacity(0.5);     //透明度
-//        primaryStage.setAlwaysOnTop(true);
+//        primaryStage.setAlwaysOnTop(true);            //总是在最上层
 
 //        primaryStage.initStyle(StageStyle.UTILITY);       //风格
 
@@ -141,7 +147,7 @@ public class Test extends Application {
         Label l2 = new Label("AnchorPane");
         ap.getChildren().add(l2);
         ap.getChildren().add(group);
-        ap.setPadding(new Insets(10));
+        ap.setPadding(new Insets(10));      //内边距
 
         AnchorPane ap2 = new AnchorPane();
         ap.getChildren().add(ap2);
@@ -183,9 +189,63 @@ public class Test extends Application {
         bp.setCenter(hb5);
 
 
+        FlowPane fp = new FlowPane();       //流式布局
+        fp.setOrientation(Orientation.VERTICAL);        //设置垂直布局
+
+        GridPane gp = new GridPane();       //网格布局
+        gp.add(new Button("gpBt"),0,0);
+        Button gpBt = new Button("gpBt2");
+        gp.add(gpBt,1,1);
+        gp.setHgap(10);     //垂直边距
+        gp.setVgap(10);     //水平边距
+//        gp.setRowSpan(new Button("gpBt2"),0);
+        gp.setMargin(gpBt,new Insets(100));      //外边距
+
+        StackPane sp = new StackPane();
+
+        TextFlow tfp = new TextFlow();   //TextFlow布局
+        Text tf1 = new Text("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        tf1.setFont(Font.font("Helvetica", FontWeight.BOLD,20));
+        tf1.setFill(Paint.valueOf("#ff0000"));
+        tf1.setLineSpacing(30);         //行边距
+        tf1.setTextAlignment(TextAlignment.CENTER);       //text对齐方式
+        tf1.setUnderline(true);     //下划线
+        tf1.setCursor(Cursor.HAND);      //设置光标样式
+        tf1.setTextOrigin(VPos.BOTTOM);     //设置位置方向
+        tfp.getChildren().addAll(tf1);
+
+        TilePane tp = new TilePane();       //瓦片布局（内容相同）
+
+
+        //对话框
+        DialogPane dp = new DialogPane();
+        dp.setHeaderText("对话框");
+        dp.getButtonTypes().add(ButtonType.CLOSE);  //关闭按钮
+        Button close = (Button) dp.lookupButton(ButtonType.CLOSE);
+        close.setOnAction((event) -> {
+            System.out.println("close");
+        });
+        ImageView imv = new ImageView("/com/test/fx/icon/title.svg");       //图标
+        dp.setGraphic(new Button("aaaa"));
+        dp.setGraphic(imv);
+        dp.setExpandableContent(new Text("扩展内容"));
+        Stage dpStage = new Stage();
+        dpStage.setAlwaysOnTop(true);
+        Scene dpScene = new Scene(dp);
+        dpStage.setScene(dpScene);
+        dpStage.show();
+
+        MySch mySch = new MySch(close);
+        mySch.setDelay(Duration.millis(0));
+        mySch.setPeriod(Duration.millis(1000));
+        mySch.start();
+
+
+
+
         //        scene
 //        stage   scene   node
-        Scene scene = new Scene(bp);
+        Scene scene = new Scene(tfp);
         primaryStage.setScene(scene);
         //快捷键(S+SHIFT)
         KeyCombination kc = new KeyCodeCombination(KeyCode.S,KeyCombination.SHIFT_DOWN);
@@ -197,10 +257,42 @@ public class Test extends Application {
         primaryStage.setHeight(600);
         primaryStage.setWidth(600);
         primaryStage.show();
+        primaryStage.setResizable(false);       //禁止拉伸
 
 //        stage1.show();
 //        stage2.show();
 
 
+    }
+}
+
+//定时任务
+class MySch<T> extends ScheduledService<T>{
+    private  Node node;
+
+    public MySch(Node node){
+        this.node = node;
+    }
+
+    @Override
+    protected Task<T> createTask() {
+        return new Task<T>() {
+            @Override
+            protected T call() throws Exception {
+
+                Button bt = new Button();
+                T t = null;
+                System.out.println("call----");
+                return t;
+            }
+
+            @Override
+            protected void updateValue(T value) {
+                System.out.println("updateValue----");
+                Double d = new Random().nextDouble();
+                System.out.println("updateValue----"+d);
+                node.setRotate(d*10);
+            }
+        };
     }
 }
